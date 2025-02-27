@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: quark-dp-backend
+    restart: unless-stopped
+    ports:
+      - "8472:8472"
+    environment:
+      - PORT=8472
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - POSTGRES_URL=${POSTGRES_URL}
+      - TZ=America/New_York
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.quark-backend.rule=Host(`dataprovider.quarkdc.com`)"
+      - "traefik.http.routers.quark-backend.entrypoints=websecure"
+      - "traefik.http.routers.quark-backend.tls=true"
+      - "traefik.http.routers.quark-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.quark-backend.loadbalancer.server.port=8472"

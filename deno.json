@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --env-file src/main.ts",
+    "dev": "deno run --watch --allow-net --allow-env --env-file src/main.ts"
+  },
+  "imports": {
+    "oak": "https://deno.land/x/oak@v12.6.1/mod.ts",
+    "postgres": "https://deno.land/x/postgres@v0.17.0/mod.ts"
+  }
+}

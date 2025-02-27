@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Deno
+.deno_dir
+
+# Node (if any)
+node_modules
+npm-debug.log
+
+# Logs
+*.log
+
+# Editor config
+.vscode
+.idea
+
+# Docs and non-essential files
+*.md
+!README.md
+LICENSE
+*.txt
+
+# Environment variables (don't include sensitive data)
+.env
+*.env
