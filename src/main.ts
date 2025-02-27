@@ -25,6 +25,27 @@ await initializeDatabase();
 // Start the scheduler service
 startScheduler();
 
+// Custom JSON serializer to handle BigInt values
+app.use(async (ctx, next) => {
+  // Store the original response.json method
+  const originalJson = ctx.response.json;
+  
+  // Override the JSON response to properly serialize BigInt values
+  ctx.response.json = function(data: unknown) {
+    this.type = "application/json";
+    this.body = JSON.stringify(data, (_key, value) => {
+      // Convert BigInt to string during serialization
+      if (typeof value === "bigint") {
+        return value.toString();
+      }
+      return value;
+    });
+    return this;
+  };
+  
+  await next();
+});
+
 // Middleware
 app.use(oakCors()); // Enable CORS
 app.use(async (ctx, next) => {

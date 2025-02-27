@@ -13,7 +13,7 @@ export interface Stock {
     dividendPeriod: string | null;
     createdAt: string;
     updatedAt: string;
-    sharePrice: string;
+    sharePrice: number;
 }
 
 export interface Shareholder {
@@ -30,7 +30,7 @@ export interface StockHistorical {
     id: number;
     stockId: number;
     ticker: string;
-    sharePrice: string;
+    sharePrice: number;
     timestamp: string;
 }
 

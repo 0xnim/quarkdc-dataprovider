@@ -86,9 +86,17 @@ router.post("/api/fetch-stock/:ticker", requireApiKey, async (ctx) => {
 router.get("/api/stocks", async (ctx) => {
     try {
         const stocks = await getAllStocks();
+        
+        // Manually convert BigInt values to regular JavaScript numbers
+        // and ensure sharePrice is a number not a string
+        const safeStocks = stocks.map(stock => ({
+            ...stock,
+            bookValue: stock.bookValue ? Number(stock.bookValue) : null,
+            sharePrice: typeof stock.sharePrice === 'string' ? parseFloat(stock.sharePrice) : stock.sharePrice
+        }));
 
         ctx.response.status = 200;
-        ctx.response.body = stocks;
+        ctx.response.body = safeStocks;
     } catch (error) {
         console.error("Error in get stocks endpoint:", error);
         ctx.response.status = 500;
@@ -119,9 +127,17 @@ router.get("/api/stock/:ticker", async (ctx) => {
             };
             return;
         }
+        
+        // Convert BigInt values to regular JavaScript numbers
+        // and ensure sharePrice is a number not a string
+        const safeStock = {
+            ...stock,
+            bookValue: stock.bookValue ? Number(stock.bookValue) : null,
+            sharePrice: typeof stock.sharePrice === 'string' ? parseFloat(stock.sharePrice) : stock.sharePrice
+        };
 
         ctx.response.status = 200;
-        ctx.response.body = stock;
+        ctx.response.body = safeStock;
     } catch (error) {
         console.error(`Error in get stock endpoint:`, error);
         ctx.response.status = 500;
@@ -150,8 +166,10 @@ router.get("/api/stock/:ticker/historical", async (ctx) => {
         const historicalPrices = await getStockHistoricalPrices(ticker, startDate, endDate);
         
         // Ensure timestamps are formatted as EST times in response
+        // and sharePrice is a number
         const formattedPrices = historicalPrices.map(price => ({
             ...price,
+            sharePrice: typeof price.sharePrice === 'string' ? parseFloat(price.sharePrice) : price.sharePrice,
             timestamp: new Date(price.timestamp).toLocaleString("en-US", {
                 timeZone: "America/New_York"
             }) + " EST"
