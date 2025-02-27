@@ -1,6 +1,7 @@
 # Docker Deployment Guide for Quark DP Backend
 
-This guide explains how to deploy the Quark DP Backend using Docker and Docker Compose.
+This guide explains how to deploy the Quark DP Backend using Docker and Docker
+Compose.
 
 ## Prerequisites
 
@@ -45,11 +46,13 @@ docker-compose logs -f
 docker-compose down
 ```
 
-To persist database data between restarts, a Docker volume is configured to store PostgreSQL data.
+To persist database data between restarts, a Docker volume is configured to
+store PostgreSQL data.
 
 ### Option 2: Manual Docker Deployment
 
-If you need more control over the deployment, you can build and run the containers separately.
+If you need more control over the deployment, you can build and run the
+containers separately.
 
 1. Build the application image:
 
@@ -126,7 +129,8 @@ docker rm quark-dp-backend quark-dp-postgres
 
 ## Data Management
 
-Database data is stored in a Docker volume named `postgres_data`. To backup this data:
+Database data is stored in a Docker volume named `postgres_data`. To backup this
+data:
 
 ```bash
 docker run --rm \

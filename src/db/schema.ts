@@ -2,8 +2,8 @@
 import { executeQuery } from "./client.ts";
 
 export async function initializeDatabase() {
-    // Create stocks table
-    await executeQuery(`
+  // Create stocks table
+  await executeQuery(`
     CREATE TABLE IF NOT EXISTS stocks (
       id INTEGER PRIMARY KEY,
       ticker TEXT NOT NULL UNIQUE,
@@ -24,8 +24,8 @@ export async function initializeDatabase() {
     )
   `);
 
-    // Create historical stock prices table
-    await executeQuery(`
+  // Create historical stock prices table
+  await executeQuery(`
     CREATE TABLE IF NOT EXISTS stock_historical (
       id SERIAL PRIMARY KEY,
       stock_id INTEGER NOT NULL REFERENCES stocks(id),
@@ -36,8 +36,8 @@ export async function initializeDatabase() {
     )
   `);
 
-    // Create shareholders table
-    await executeQuery(`
+  // Create shareholders table
+  await executeQuery(`
     CREATE TABLE IF NOT EXISTS shareholders (
       id SERIAL PRIMARY KEY,
       stock_id INTEGER NOT NULL REFERENCES stocks(id),
@@ -50,5 +50,5 @@ export async function initializeDatabase() {
     )
   `);
 
-    console.log("Database schema initialized");
+  console.log("Database schema initialized");
 }

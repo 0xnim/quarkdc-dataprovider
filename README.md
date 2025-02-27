@@ -68,7 +68,8 @@ docker run -p 8000:8000 \
 - `PORT` - Server port (default: 8000)
 - `ADMIN_API_KEY` - API key for protected endpoints
 - `POSTGRES_URL` - Database connection string
-- `POSTGRES_PASSWORD` - Password for the PostgreSQL database (for docker-compose)
+- `POSTGRES_PASSWORD` - Password for the PostgreSQL database (for
+  docker-compose)
 
 ## Documentation
 
@@ -77,4 +78,5 @@ docker run -p 8000:8000 \
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.# quarkdc-dataprovider
+This project is licensed under the MIT License - see the LICENSE file for
+details.# quarkdc-dataprovider
