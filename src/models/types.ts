@@ -61,3 +61,22 @@ export interface ShareholderHistorical {
   shares: number;
   timestamp: string;
 }
+
+export interface CompanyMetadata {
+  id: number;
+  stockId: number;
+  ticker: string;
+  ceo: string | null;
+  sector: string | null;
+  industry: string | null;
+  employees: number | null;
+  founded: string | null;
+  website: string | null;
+  description: string | null;
+  headquarters: string | null;
+  lastUpdatedAt: string;
+}
+
+export interface StockWithMetadata extends Stock {
+  metadata: CompanyMetadata | null;
+}

@@ -3,9 +3,12 @@ import { Context, Router } from "https://deno.land/x/oak@v12.6.1/mod.ts";
 import { fetchAllStocks, fetchStockDetail } from "../services/stockService.ts";
 import {
   getAllStocks,
+  getCompanyMetadataByTicker,
   getShareholderHistorical,
   getStockByTicker,
   getStockHistoricalPrices,
+  getStockWithMetadataByTicker,
+  saveCompanyMetadata,
   saveStock,
   saveStockDetail,
 } from "../services/dbService.ts";
@@ -308,6 +311,137 @@ router.get("/api/stock/:ticker/shareholders", async (ctx) => {
     ctx.response.body = formattedShareholders;
   } catch (error) {
     console.error(`Error in get shareholders endpoint:`, error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      error: error.message,
+    };
+  }
+});
+
+// Route to get company metadata
+router.get("/api/stock/:ticker/metadata", async (ctx) => {
+  try {
+    const { ticker } = ctx.params;
+    if (!ticker) {
+      ctx.response.status = 400;
+      ctx.response.body = { success: false, error: "Ticker is required" };
+      return;
+    }
+
+    const metadata = await getCompanyMetadataByTicker(ticker);
+
+    if (!metadata) {
+      ctx.response.status = 404;
+      ctx.response.body = {
+        success: false,
+        error: `Metadata for stock with ticker ${ticker} not found`,
+      };
+      return;
+    }
+
+    ctx.response.status = 200;
+    ctx.response.body = metadata;
+  } catch (error) {
+    console.error(`Error in get company metadata endpoint:`, error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      error: error.message,
+    };
+  }
+});
+
+// Route to get stock with metadata
+router.get("/api/stock/:ticker/full", async (ctx) => {
+  try {
+    const { ticker } = ctx.params;
+    if (!ticker) {
+      ctx.response.status = 400;
+      ctx.response.body = { success: false, error: "Ticker is required" };
+      return;
+    }
+
+    const stockWithMetadata = await getStockWithMetadataByTicker(ticker);
+
+    if (!stockWithMetadata) {
+      ctx.response.status = 404;
+      ctx.response.body = {
+        success: false,
+        error: `Stock with ticker ${ticker} not found`,
+      };
+      return;
+    }
+
+    // Convert BigInt values to regular JavaScript numbers
+    // and ensure sharePrice is a number not a string
+    const safeStock = {
+      ...stockWithMetadata,
+      bookValue: stockWithMetadata.bookValue
+        ? Number(stockWithMetadata.bookValue)
+        : null,
+      sharePrice: typeof stockWithMetadata.sharePrice === "string"
+        ? parseFloat(stockWithMetadata.sharePrice)
+        : stockWithMetadata.sharePrice,
+    };
+
+    ctx.response.status = 200;
+    ctx.response.body = safeStock;
+  } catch (error) {
+    console.error(`Error in get stock with metadata endpoint:`, error);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      success: false,
+      error: error.message,
+    };
+  }
+});
+
+// Route to save or update company metadata - ADMIN ONLY
+router.post("/api/stock/:ticker/metadata", requireApiKey, async (ctx) => {
+  try {
+    const { ticker } = ctx.params;
+    if (!ticker) {
+      ctx.response.status = 400;
+      ctx.response.body = { success: false, error: "Ticker is required" };
+      return;
+    }
+
+    const stock = await getStockByTicker(ticker);
+    if (!stock) {
+      ctx.response.status = 404;
+      ctx.response.body = {
+        success: false,
+        error: `Stock with ticker ${ticker} not found`,
+      };
+      return;
+    }
+
+    const requestBody = await ctx.request.body().value;
+
+    // Create metadata object from request
+    const metadata: Omit<CompanyMetadata, "id" | "lastUpdatedAt"> = {
+      stockId: stock.id,
+      ticker: stock.ticker,
+      ceo: requestBody.ceo || null,
+      sector: requestBody.sector || null,
+      industry: requestBody.industry || null,
+      employees: requestBody.employees || null,
+      founded: requestBody.founded || null,
+      website: requestBody.website || null,
+      description: requestBody.description || null,
+      headquarters: requestBody.headquarters || null,
+    };
+
+    await saveCompanyMetadata(metadata as CompanyMetadata);
+
+    ctx.response.status = 200;
+    ctx.response.body = {
+      success: true,
+      message: `Updated metadata for ${ticker}`,
+    };
+  } catch (error) {
+    console.error(`Error in save company metadata endpoint:`, error);
     ctx.response.status = 500;
     ctx.response.body = {
       success: false,

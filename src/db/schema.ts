@@ -50,5 +50,24 @@ export async function initializeDatabase() {
     )
   `);
 
+  // Create company metadata table
+  await executeQuery(`
+    CREATE TABLE IF NOT EXISTS company_metadata (
+      id SERIAL PRIMARY KEY,
+      stock_id INTEGER NOT NULL REFERENCES stocks(id),
+      ticker TEXT NOT NULL,
+      ceo TEXT,
+      sector TEXT,
+      industry TEXT,
+      employees INTEGER,
+      founded TEXT,
+      website TEXT,
+      description TEXT,
+      headquarters TEXT,
+      last_updated_at TIMESTAMP NOT NULL DEFAULT timezone('America/New_York', CURRENT_TIMESTAMP),
+      UNIQUE(stock_id)
+    )
+  `);
+
   console.log("Database schema initialized");
 }

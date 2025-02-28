@@ -1,10 +1,12 @@
 // src/services/dbService.ts
 import { executeQuery } from "../db/client.ts";
 import {
+  CompanyMetadata,
   ShareholderHistorical,
   Stock,
   StockDetail,
   StockHistorical,
+  StockWithMetadata,
 } from "../models/types.ts";
 
 export async function saveStock(stock: Stock): Promise<void> {
@@ -342,4 +344,88 @@ export async function getLastStockHistoricalEntryTime(): Promise<Date | null> {
   `);
 
   return result.length > 0 && result[0].max_time ? result[0].max_time : null;
+}
+
+export async function saveCompanyMetadata(
+  metadata: CompanyMetadata,
+): Promise<void> {
+  const existingMetadata = await executeQuery<{ id: number }>(
+    "SELECT id FROM company_metadata WHERE stock_id = $1",
+    [metadata.stockId],
+  );
+
+  if (existingMetadata.length === 0) {
+    // Insert new metadata
+    await executeQuery(
+      `INSERT INTO company_metadata (
+        stock_id, ticker, ceo, sector, industry, employees, 
+        founded, website, description, headquarters
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        metadata.stockId,
+        metadata.ticker,
+        metadata.ceo,
+        metadata.sector,
+        metadata.industry,
+        metadata.employees,
+        metadata.founded,
+        metadata.website,
+        metadata.description,
+        metadata.headquarters,
+      ],
+    );
+  } else {
+    // Update existing metadata
+    await executeQuery(
+      `UPDATE company_metadata SET 
+        ticker = $2, ceo = $3, sector = $4, industry = $5, employees = $6,
+        founded = $7, website = $8, description = $9, headquarters = $10,
+        last_updated_at = timezone('America/New_York', CURRENT_TIMESTAMP)
+      WHERE stock_id = $1`,
+      [
+        metadata.stockId,
+        metadata.ticker,
+        metadata.ceo,
+        metadata.sector,
+        metadata.industry,
+        metadata.employees,
+        metadata.founded,
+        metadata.website,
+        metadata.description,
+        metadata.headquarters,
+      ],
+    );
+  }
+}
+
+export async function getCompanyMetadataByTicker(
+  ticker: string,
+): Promise<CompanyMetadata | null> {
+  const metadata = await executeQuery<CompanyMetadata>(
+    `SELECT 
+      id, stock_id as "stockId", ticker, ceo, sector, industry, employees, 
+      founded, website, description, headquarters, 
+      last_updated_at as "lastUpdatedAt"
+    FROM company_metadata
+    WHERE ticker = $1`,
+    [ticker],
+  );
+
+  return metadata.length > 0 ? metadata[0] : null;
+}
+
+export async function getStockWithMetadataByTicker(
+  ticker: string,
+): Promise<StockWithMetadata | null> {
+  const stock = await getStockByTicker(ticker);
+  if (!stock) {
+    return null;
+  }
+
+  const metadata = await getCompanyMetadataByTicker(ticker);
+
+  return {
+    ...stock,
+    metadata,
+  };
 }
