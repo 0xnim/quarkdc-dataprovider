@@ -171,7 +171,13 @@ router.get("/api/stock/:ticker/historical", async (ctx) => {
 
     const url = new URL(ctx.request.url);
     const startDate = url.searchParams.get("startDate") || undefined;
-    const endDate = url.searchParams.get("endDate") || undefined;
+    let endDate = url.searchParams.get("endDate") || undefined;
+
+    // If endDate is provided, append T23:59:59 to include the entire day
+    if (endDate && !endDate.includes("T")) {
+      endDate = `${endDate}T23:59:59`;
+    }
+
     const frequency = url.searchParams.get("frequency") || "hourly";
     const format = url.searchParams.get("format") || "default";
 
@@ -276,7 +282,12 @@ router.get("/api/stock/:ticker/shareholders", async (ctx) => {
       ? parseInt(url.searchParams.get("accountId")!)
       : undefined;
     const startDate = url.searchParams.get("startDate") || undefined;
-    const endDate = url.searchParams.get("endDate") || undefined;
+    let endDate = url.searchParams.get("endDate") || undefined;
+
+    // If endDate is provided, append T23:59:59 to include the entire day
+    if (endDate && !endDate.includes("T")) {
+      endDate = `${endDate}T23:59:59`;
+    }
 
     const shareholders = await getShareholderHistorical(
       ticker,
