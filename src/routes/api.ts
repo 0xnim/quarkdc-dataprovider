@@ -225,9 +225,24 @@ router.get("/api/stock/:ticker/historical", async (ctx) => {
             ? parseFloat(price.sharePrice)
             : price.sharePrice;
 
-          // Format date in YYYY-MM-DD format
+          // Format date based on frequency
           const dateObj = new Date(price.timestamp);
-          const formattedDate = dateObj.toISOString().split("T")[0];
+          let formattedDate;
+
+          if (
+            frequency.toLowerCase() === "daily" ||
+            frequency.toLowerCase() === "weekly" ||
+            frequency.toLowerCase() === "monthly"
+          ) {
+            // For daily or above frequencies, use date-only format (YYYY-MM-DD)
+            formattedDate = dateObj.toISOString().split("T")[0];
+          } else {
+            // For hourly or minutely, include the time (YYYY-MM-DD HH:MM:SS)
+            formattedDate = dateObj.toISOString().replace("T", " ").substring(
+              0,
+              19,
+            );
+          }
 
           return {
             date: formattedDate,
@@ -246,17 +261,44 @@ router.get("/api/stock/:ticker/historical", async (ctx) => {
       return;
     }
 
-    // Default format - Ensure timestamps are formatted as EST times in response
-    // and sharePrice is a number
-    const formattedPrices = historicalPrices.map((price) => ({
-      ...price,
-      sharePrice: typeof price.sharePrice === "string"
-        ? parseFloat(price.sharePrice)
-        : price.sharePrice,
-      timestamp: new Date(price.timestamp).toLocaleString("en-US", {
-        timeZone: "America/New_York",
-      }) + " EST",
-    }));
+    // Default format - Format timestamps based on frequency and ensure sharePrice is a number
+    const formattedPrices = historicalPrices.map((price) => {
+      const dateObj = new Date(price.timestamp);
+
+      // The timestamp from DB is already in EST, simply format it
+      let formattedTimestamp;
+      if (
+        frequency.toLowerCase() === "daily" ||
+        frequency.toLowerCase() === "weekly" ||
+        frequency.toLowerCase() === "monthly"
+      ) {
+        // For daily or above frequencies, use date-only format
+        // Format: YYYY-MM-DD EST
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        formattedTimestamp = `${year}-${month}-${day} EST`;
+      } else {
+        // For hourly or minutely, include the time
+        // Format: YYYY-MM-DD HH:MM:SS EST
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        const hours = String(dateObj.getHours()).padStart(2, "0");
+        const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+        const seconds = String(dateObj.getSeconds()).padStart(2, "0");
+        formattedTimestamp =
+          `${year}-${month}-${day} ${hours}:${minutes}:${seconds} EST`;
+      }
+
+      return {
+        ...price,
+        sharePrice: typeof price.sharePrice === "string"
+          ? parseFloat(price.sharePrice)
+          : price.sharePrice,
+        timestamp: formattedTimestamp,
+      };
+    });
 
     ctx.response.status = 200;
     ctx.response.body = formattedPrices;
